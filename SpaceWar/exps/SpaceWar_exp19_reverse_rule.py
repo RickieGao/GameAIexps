@@ -3,16 +3,13 @@ import numpy as np
 import cv2
 import sys
 import random
-import math
 from collections import deque
-# import copy
-# import gym
-import plane as game
-# functions to process images (game frames)
-import RuleAction2
-
-
 sys.path.append("game/")
+sys.path.append("ruleset/")
+import plane as game
+import RuleAction
+
+
 GAME = 'SpaceCrash-rule'  # the name of the game being played for log files
 REPLAY_MEMORY = 50000  # number of previous transitions to remember
 BATCH = 32  # size of minibatch
@@ -21,7 +18,7 @@ EXPLORE = 1000000.  # frames over which to anneal epsilon
 FINAL_EPSILON = 0.0001  # final value of epsilon
 INITIAL_EPSILON = 0.07  # starting value of epsilon
 LEARNING_RATE = 1e-6
-INITIAL_OMEGA = 1 - INITIAL_EPSILON  # OMEGA is the probability of rule
+INITIAL_OMEGA = 0.8  # OMEGA is the probability of rule
 FINAL_OMEGA = 0
 DECAY_RATE = 0.80
 DECAY_STEPS = 30000
@@ -154,7 +151,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
     # tensorboard output
     merged = tf.summary.merge_all()
-    writer = tf.summary.FileWriter(r"result/Exp13Graph/", sess.graph)
+    writer = tf.summary.FileWriter(r"result/Exp19Graph/", sess.graph)
 
     # record the reward
     with tf.name_scope('reward_per_life'):
@@ -210,7 +207,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
     # saving and loading networks
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
-    checkpoint = tf.train.get_checkpoint_state(r"result/Exp13_saved_networks")
+    checkpoint = tf.train.get_checkpoint_state(r"result/Exp19_saved_networks")
 
     if checkpoint and checkpoint.model_checkpoint_path:
         saver.restore(sess, checkpoint.model_checkpoint_path)
@@ -231,11 +228,11 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
         if t % FRAME_PER_ACTION == 0:
             # choose action based on rule with a probability of omega - epsilon
             if random.random() <= omega:
-                action = RuleAction2.rule_action(game_frame)
+                action = RuleAction.rule_action(game_frame)
                 if action == "left":
-                    a_t[1] = 1
-                elif action == "right":
                     a_t[2] = 1
+                elif action == "right":
+                    a_t[1] = 1
                 print("----------Rule Action----------")
             elif random.random() <= epsilon:
                 print("----------Random Action----------")
@@ -252,8 +249,6 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
             epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / EXPLORE
 
         # scale down omega
-        # if omega - epsilon > 0 and t > OBSERVE:
-        #     omega -= (INITIAL_OMEGA - FINAL_OMEGA) / EXPLORE
         if t > OBSERVE:
             omega = INITIAL_OMEGA * (DECAY_RATE ** (t / DECAY_STEPS))
 
@@ -350,7 +345,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
         # save progress every 10000 iterations
         if t % 10000 == 0:
-            saver.save(sess, 'result/Exp13_saved_networks/' + GAME + '-dqn', global_step=t)
+            saver.save(sess, 'result/Exp19_saved_networks/' + GAME + '-dqn', global_step=t)
 
         # print info
         state = ""

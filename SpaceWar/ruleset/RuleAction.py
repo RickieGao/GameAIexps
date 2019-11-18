@@ -1,5 +1,7 @@
 import cv2
+import sys
 from random import choice
+sys.path.append("imageExtractionLab")
 import imageProcessing
 
 PLAYER_RADIUS = 57

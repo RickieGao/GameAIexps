@@ -5,9 +5,9 @@ import sys
 import random
 from collections import deque
 import pygame
-import breakout as game
-sys.path.append("game/")
 
+sys.path.append("game/")
+import breakout as game
 
 GAME = 'breakout'  # the name of the game being played for log files
 REPLAY_MEMORY = 50000  # number of previous transitions to remember

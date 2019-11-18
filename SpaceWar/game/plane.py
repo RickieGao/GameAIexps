@@ -91,7 +91,7 @@ class GameState:
         # 游戏界面标题
         # pygame.display.set_caption('PlaneDQN')
         # 飞机及子弹图片集合
-        plane_img = pygame.image.load('shoot.png')
+        plane_img = pygame.image.load('game/shoot.png')
         # 设置玩家飞机不同状态的图片列表，多张图片展示为动画效果
         player_rect = []
         player_rect.append(pygame.Rect(0, 99, 102, 126))        # 玩家飞机图片
