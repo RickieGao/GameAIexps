@@ -39,7 +39,7 @@ def rule_action(frame):
 		closest_enemy = max(enemy_coordinate, key=lambda x: x[0][1])
 
 		# compare the X coordinate of player and closest enemy, choose action
-		if closest_enemy[0][0] > player_coordinate[0][0][0]:
+		if closest_enemy[0][0] > player_coordinate[0][0][0] and len(player_coordinate) > 0:
 			return "right"
 		else:
 			return "left"

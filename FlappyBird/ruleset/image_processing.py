@@ -3,11 +3,11 @@
 '''
 	All about image processing.
 '''
-
+import sys
+sys.path.append("ruleset/")
 import cv2
-
 from functools import cmp_to_key
-from ImageExtraction.func import *					# Cooper: My image processing functions
+from func import *					# Cooper: My image processing functions
 
 def PygameSurfaceToCV2Frame(pygame_surface):
 	'''

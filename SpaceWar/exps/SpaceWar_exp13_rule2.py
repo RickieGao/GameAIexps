@@ -4,14 +4,13 @@ import cv2
 import sys
 import random
 from collections import deque
-# import copy
-# import gym
-import plane as game
-# from image_processing import *  # functions to process images (game frames)
-
-
 sys.path.append("game/")
-GAME = 'SpaceCrash'  # the name of the game being played for log files
+sys.path.append("ruleset/")
+import plane as game
+import RuleAction
+
+
+GAME = 'SpaceCrash-rule'  # the name of the game being played for log files
 REPLAY_MEMORY = 50000  # number of previous transitions to remember
 BATCH = 32  # size of minibatch
 OBSERVE = 10000.  # timesteps to observe before training
@@ -19,8 +18,10 @@ EXPLORE = 1000000.  # frames over which to anneal epsilon
 FINAL_EPSILON = 0.0001  # final value of epsilon
 INITIAL_EPSILON = 0.07  # starting value of epsilon
 LEARNING_RATE = 1e-6
-# INITIAL_OMEGA = 0.5  # OMEGA is the probability of rule
-# FINAL_OMEGA = 0
+INITIAL_OMEGA = 0.8  # OMEGA is the probability of rule
+FINAL_OMEGA = 0
+DECAY_RATE = 0.80
+DECAY_STEPS = 30000
 GAMMA = 0.99  # decay rate of past observations
 ACTIONS = 3  # number of valid actions
 FRAME_PER_ACTION = 1
@@ -131,7 +132,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
         cost = tf.reduce_mean(tf.square(y - readout_action))
         tf.summary.scalar('loss', cost)
     with tf.name_scope('train'):
-        train_step = tf.train.AdamOptimizer(1e-6).minimize(cost)
+        train_step = tf.train.AdamOptimizer(LEARNING_RATE).minimize(cost)
 
     # network difference
     regularize_lambda = 1.0
@@ -150,7 +151,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
     # tensorboard output
     merged = tf.summary.merge_all()
-    writer = tf.summary.FileWriter(r"result/Exp10Graph/", sess.graph)
+    writer = tf.summary.FileWriter(r"saved_networks/Exp13Graph/", sess.graph)
 
     # record the reward
     with tf.name_scope('reward_per_life'):
@@ -201,12 +202,12 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
     s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
 
     # variable to save pygame frame
-    # game_frame = x_t_colored
+    game_frame = x_t_colored
 
     # saving and loading networks
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
-    checkpoint = tf.train.get_checkpoint_state(r"result/Exp10_saved_networks")
+    checkpoint = tf.train.get_checkpoint_state(r"saved_networks/Exp13_saved_networks")
 
     if checkpoint and checkpoint.model_checkpoint_path:
         saver.restore(sess, checkpoint.model_checkpoint_path)
@@ -216,7 +217,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
     # start training
     epsilon = INITIAL_EPSILON
-    # omega = INITIAL_OMEGA
+    omega = INITIAL_OMEGA
     t = 0
     episode_reward = 0
     while True:
@@ -225,7 +226,15 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
         a_t = np.zeros([ACTIONS])
         action_index = 0
         if t % FRAME_PER_ACTION == 0:
-            if random.random() <= epsilon:
+            # choose action based on rule with a probability of omega - epsilon
+            if random.random() <= omega:
+                action = RuleAction.rule_action(game_frame)
+                if action == "left":
+                    a_t[1] = 1
+                elif action == "right":
+                    a_t[2] = 1
+                print("----------Rule Action----------")
+            elif random.random() <= epsilon:
                 print("----------Random Action----------")
                 action_index = random.randrange(ACTIONS)
                 a_t[random.randrange(ACTIONS)] = 1
@@ -240,8 +249,8 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
             epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / EXPLORE
 
         # scale down omega
-        # if omega < FINAL_OMEGA and t > OBSERVE:
-        #     omega -= (FINAL_OMEGA - INITIAL_OMEGA) / EXPLORE
+        if t > OBSERVE:
+            omega = INITIAL_OMEGA * (DECAY_RATE ** (t / DECAY_STEPS))
 
         # run the selected action and observe next state and reward
         x_t1_colored, r_t, terminal = game_state.frame_step(a_t)
@@ -256,7 +265,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
             D.popleft()
 
         # update pygame frame
-        # game_frame = x_t1_colored
+        game_frame = x_t1_colored
 
         episode_reward += r_t
 
@@ -318,7 +327,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
                 s: s_j_batch}
             )
 
-            # update tensorboard data per 1000 steps
+            # update tensorboard data per 100 steps
             if t % 1000 == 0:
                 result = sess.run(merged, feed_dict={
                     y: y_batch,
@@ -336,7 +345,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
         # save progress every 10000 iterations
         if t % 10000 == 0:
-            saver.save(sess, 'result/Exp10_saved_networks/' + GAME + '-dqn', global_step=t)
+            saver.save(sess, 'saved_networks/Exp13_saved_networks/' + GAME + '-dqn', global_step=t)
 
         # print info
         state = ""
@@ -348,7 +357,8 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
             state = "train"
 
         print("TIMESTEP", t, "/ STATE", state,
-              "/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, "/ EPISODE_REWARD", episode_reward,
+              "/ EPSILON", epsilon, "/OMEGA", omega, "/ ACTION", action_index,
+              "/ REWARD", r_t, "/ EPISODE_REWARD", episode_reward,
               "/ Q_MAX %e" % np.max(readout_t), "/ TERMINAL", terminal)
         if terminal:
             episode_reward = 0
