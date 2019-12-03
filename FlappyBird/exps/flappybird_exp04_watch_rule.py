@@ -1,6 +1,8 @@
 import tensorflow as tf
 import cv2
 import sys
+from FlappyBird.ruleset.image_processing import AdviseAction
+
 sys.path.append("game/")
 sys.path.append("ruleset/")
 import wrapped_flappy_bird_test as game
@@ -10,11 +12,11 @@ from collections import deque
 from image_processing import *
 
 
-GAME = 'bird'								# the name of the game being played for log files
-ACTIONS = 2									# number of valid actions
-GAMMA = 0.99								# decay rate of past observations
-REPLAY_MEMORY = 50000						# number of previous transitions to remember
-BATCH = 32									# size of minibatch
+GAME = 'bird'
+ACTIONS = 2  # number of valid actions
+GAMMA = 0.99  # decay rate of past observations
+REPLAY_MEMORY = 50000  # number of previous transitions to remember
+BATCH = 32  # size of minibatch
 FRAME_PER_ACTION = 1
 OBSERVE = 0
 EXPLORE = 3000000
@@ -30,21 +32,21 @@ def setRandomSeed(seed):
 
 
 def weight_variable(shape):
-	initial = tf.truncated_normal(shape, stddev = 0.01)
+	initial = tf.truncated_normal(shape, stddev=0.01)
 	return tf.Variable(initial)
 
 
 def bias_variable(shape):
-	initial = tf.constant(0.01, shape = shape)
+	initial = tf.constant(0.01, shape=shape)
 	return tf.Variable(initial)
 
 
 def conv2d(x, W, stride):
-	return tf.nn.conv2d(x, W, strides = [1, stride, stride, 1], padding = "SAME")
+	return tf.nn.conv2d(x, W, strides=[1, stride, stride, 1], padding="SAME")
 
 
 def max_pool_2x2(x):
-	return tf.nn.max_pool(x, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1], padding = "SAME")
+	return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding="SAME")
 
 
 def createNetwork():
@@ -128,21 +130,6 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 	with tf.name_scope('train'):
 		train_step = tf.train.AdamOptimizer(1e-6).minimize(cost)
 
-	# network difference
-	regularize_lambda = 1.0
-	regularizer = tf.contrib.layers.l2_regularizer(regularize_lambda)	# equal to tf.nn.l2_loss
-
-	with tf.name_scope('weight'):
-		last_W_fc1 = tf.Variable(tf.constant(0.0, shape = W_fc1.get_shape()))
-		diff_W_fc1 = tf.contrib.layers.apply_regularization(regularizer, [W_fc1 - last_W_fc1])
-		tf.summary.scalar('diff_W_fc1', diff_W_fc1)
-		last_W_fc1_update = tf.assign(last_W_fc1, W_fc1)
-
-		last_W_fc2 = tf.Variable(tf.constant(0.0, shape=W_fc2.get_shape()))
-		diff_W_fc2 = tf.contrib.layers.apply_regularization(regularizer, [W_fc2 - last_W_fc2])
-		tf.summary.scalar('diff_W_fc2', diff_W_fc2)
-		last_W_fc2_update = tf.assign(last_W_fc2, W_fc2)
-
 	action_count = 0.0
 
 	# open up a game state to communicate with emulator
@@ -158,9 +145,6 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 	x_t = cv2.cvtColor(cv2.resize(x_t_colored, (80, 80)), cv2.COLOR_BGR2GRAY)
 	ret, x_t = cv2.threshold(x_t, 1, 255, cv2.THRESH_BINARY)
 	s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
-
-	# variable to save pygame frame
-	pygame_frame = x_t_colored
 
 	# saving and loading networks
 	saver = tf.train.Saver()
@@ -178,13 +162,11 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 	t = 0
 	rate_array = []
 	time_line = []
-	rate = 0
 	trigger_time_array = []
 	action_times_array = []
 	rule_triger_times = 0
 	pipe_reward = 0
-	pic_num = 0
-	while t < 100000:
+	while t < 10001:
 		# choose an action epsilon greedily
 		readout_t = readout.eval(feed_dict={s: [s_t]})[0]
 		a_t = np.zeros([ACTIONS])
@@ -207,6 +189,9 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 		x_t1 = np.reshape(x_t1, (80, 80, 1))
 		s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
 
+		# update pygame frame
+		pygame_frame = x_t1_colored
+
 		# count rule action
 		action_map = {'U': [0, 1], 'D': [1, 0], 'N': [0, 0], 'E': [0, 0]}
 		rule_action = AdviseAction(pygame_frame)
@@ -214,9 +199,9 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 			rule_triger_times += 1
 			if action_map[rule_action] == a_t.tolist():
 				action_count += 1
-			elif pic_num < 10 and t % 60 == 0:
-				cv2.imwrite("rule" + str(t) + ".png", pygame_frame)
-				pic_num += 1
+			else:
+				cv2.imwrite("rule" + str(t) + rule_action + ".png", pygame_frame)
+				print("store image")
 
 		if rule_triger_times != 0 and t % 10000 == 0 and t > 0:
 			rate = float(action_count) / float(rule_triger_times)
@@ -228,8 +213,6 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 			action_count = 0
 			print("work")
 
-		# update pygame frame
-		pygame_frame = x_t1_colored
 		if r_t == 1:
 			pipe_reward += 1
 
