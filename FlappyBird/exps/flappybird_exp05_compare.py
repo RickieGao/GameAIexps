@@ -160,12 +160,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 	# start training
 	epsilon = INITIAL_EPSILON
 	t = 0
-	rate_array = []
-	time_line = []
-	trigger_time_array = []
-	action_times_array = []
 	rule_triger_times = 0
-	pipe_reward = 0
 	while t < 10001:
 		# choose an action epsilon greedily
 		readout_t = readout.eval(feed_dict={s: [s_t]})[0]
@@ -201,20 +196,8 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 				action_count += 1
 			else:
 				cv2.imwrite("dqn" + str(t) + rule_action + ".png", pygame_frame)
+				cv2.imwrite("dqn" + str(t) + rule_action + ".png", s_t)
 				print("store image")
-
-		if rule_triger_times != 0 and t % 10000 == 0 and t > 0:
-			rate = float(action_count) / float(rule_triger_times)
-			trigger_time_array.append(rule_triger_times)
-			action_times_array.append(action_count)
-			rate_array.append(rate)
-			time_line.append(t)
-			rule_triger_times = 0
-			action_count = 0
-			print("work")
-
-		if r_t == 1:
-			pipe_reward += 1
 
 		s_t = s_t1
 		t += 1
@@ -222,40 +205,18 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 		# print info
 		if t <= OBSERVE:
 			state = "observe"
-		elif t > OBSERVE and t <= OBSERVE + EXPLORE:
+		elif t <= OBSERVE + EXPLORE:
 			state = "explore"
 		else:
 			state = "train"
 
-		print("TIMESTEP", t, "/ STATE", state,
-			"/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, "/ PIPE_REWARD", pipe_reward,
-			"/ Q_MAX %e" % np.max(readout_t), "/ RULE_ACTION", rule_action)
-		if terminal:
-			pipe_reward = 0
-
-	time_line_file = open(r'dqn_time_line.txt', 'w')
-	for word in time_line:
-		time_line_file.write(str(word))
-		time_line_file.write('\n')
-	time_line_file.close()
-
-	rate_array_file = open(r'dqn_rate_array.txt', 'w')
-	for word in rate_array:
-		rate_array_file.write(str(word))
-		rate_array_file.write('\n')
-	rate_array_file.close()
-
-	trigger_time_array_file = open(r'dqn_trigger_time_array.txt', 'w')
-	for word in trigger_time_array:
-		trigger_time_array_file.write(str(word))
-		trigger_time_array_file.write('\n')
-	trigger_time_array_file.close()
-
-	action_times_array_file = open(r'dqn_action_times_array.txt', 'w')
-	for word in action_times_array:
-		action_times_array_file.write(str(word))
-		action_times_array_file.write('\n')
-	action_times_array_file.close()
+		print("TIMESTEP", t,
+			  "/ STATE", state,
+			  "/ EPSILON", epsilon,
+			  "/ ACTION", action_index,
+			  "/ REWARD", r_t,
+			  "/ Q_MAX %e", np.max(readout_t),
+			  "/ RULE_ACTION", rule_action)
 
 	print('finished!')
 

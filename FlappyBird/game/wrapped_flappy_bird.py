@@ -150,6 +150,7 @@ def getRandomPipe():
 	"""returns a randomly generated pipe"""
 	# y of gap between upper and lower pipe
 	gapYs = [20, 30, 40, 50, 60, 70, 80, 90]
+	random.seed(5)
 	index = random.randint(0, len(gapYs)-1)
 	gapY = gapYs[index]
 
