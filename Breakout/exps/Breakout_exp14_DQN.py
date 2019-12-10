@@ -207,7 +207,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
     # saving and loading networks
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
-    checkpoint = tf.train.get_checkpoint_state(r"result/Exp8_saved_networks")
+    checkpoint = tf.train.get_checkpoint_state(r"result/Exp14_saved_networks")
 
     if checkpoint and checkpoint.model_checkpoint_path:
         saver.restore(sess, checkpoint.model_checkpoint_path)
@@ -337,7 +337,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
         # save progress every 10000 iterations
         if t % 10000 == 0:
-            saver.save(sess, 'result/Exp8_saved_networks/' + GAME + '-dqn', global_step=t)
+            saver.save(sess, 'result/Exp14_saved_networks/' + GAME + '-dqn', global_step=t)
 
         # print info
         state = ""

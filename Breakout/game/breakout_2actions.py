@@ -68,7 +68,7 @@ class Bat(object):
 
         # 设置球拍参数
         self.bat_color = (0, 175, 0)
-        self.bat_length = 50
+        self.bat_length = 75
         self.bat_wide = 10
         # 球拍单步运动步长
         self.bat_path_length = 10
