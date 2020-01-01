@@ -27,7 +27,7 @@ class Ball(object):
 
     def __init__(self, *args, **kw):
         # 设置球的半径、颜色、移动速度参数
-        self.ball_color = (255, 0, 0)
+        self.ball_color = (0, 255, 0)
         self.move_x = 9
         self.move_y = 9
         self.radius = 10
@@ -67,8 +67,8 @@ class Bat(object):
     def __init__(self, *args, **kw):
 
         # 设置球拍参数
-        self.bat_color = (0, 175, 0)
-        self.bat_length = 75
+        self.bat_color = (200, 0, 0)
+        self.bat_length = 100
         self.bat_wide = 10
         # 球拍单步运动步长
         self.bat_path_length = 10
@@ -94,7 +94,7 @@ class Bat(object):
                 self.bat_x = self.bat_x - self.bat_path_length
             else:
                 self.bat_x = 0
-        if input_actions[1] == 1:
+        if input_actions[2] == 1:
             count = self.bat_x + self.bat_length + self.bat_path_length
             if count <= self.window_length:
                 self.bat_x = self.bat_x + self.bat_path_length
@@ -332,29 +332,31 @@ class Main(GameWindow, Bat, Ball, Brick, Collision, Score):
         return image_data, self.reward, terminal, self.ball_x, self.bat_mid
 
 
-#
-# def human_play():
-#     running = 1
-#     while running:
-#         for event in pygame.event.get():
-#             if event.type == QUIT:
-#                 pygame.quit()
-#                 sys.exit()
-#             if event.type == KEYDOWN:
-#                 if event.key == K_LEFT:
-#                     reward, terminal, image_date, ball, bat = Main.frame_step([1, 0, 0])
-#                 if event.key == K_RIGHT:
-#                     reward, terminal, image_date, ball, bat = Main.frame_step([0, 0, 1])
-#             # print(reward)
-#             # if terminal == 1:
-#             #     pygame.quit()
-#             #     sys.exit()
-#
-#
-# if __name__ == '__main__':
-#     pygame.init()
-#     pygame.font.init()
-#     human_play()
+def human_play():
+    running = True
+    game = Main()
+    reward = 0
+    terminal = False
+    while running:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == KEYDOWN:
+                if event.key == K_LEFT:
+                    image, reward, terminal, ball, bat = game.frame_step([1, 0, 0])
+                if event.key == K_RIGHT:
+                    image, reward, terminal, ball, bat = game.frame_step([0, 0, 1])
+                print(reward)
+                if terminal == 1:
+                    pygame.quit()
+                    sys.exit()
+
+
+if __name__ == '__main__':
+    pygame.init()
+    pygame.font.init()
+    human_play()
 
 
 

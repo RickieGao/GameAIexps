@@ -1,9 +1,7 @@
 import tensorflow as tf
 import cv2
 import sys
-
 from FlappyBird.ruleset.image_processing import AdviseAction
-
 sys.path.append("game/")
 sys.path.append("ruleset/")
 import wrapped_flappy_bird_test as game
@@ -135,7 +133,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 	# saving and loading networks
 	saver = tf.train.Saver()
 	sess.run(tf.global_variables_initializer())
-	checkpoint = tf.train.get_checkpoint_state("saved_networks/DQN_rule_count_saved_networks")
+	checkpoint = tf.train.get_checkpoint_state("saved_networks/DQN_count_saved_networks")
 
 	if checkpoint and checkpoint.model_checkpoint_path:
 		saver.restore(sess, checkpoint.model_checkpoint_path)
@@ -153,7 +151,11 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 	action_times_array = []
 	rule_triger_times = 0
 	pipe_reward = 0
-	while t < 100001:
+	is_trigering = False
+	record_flag = False
+	flappy_per_trigger = []
+	flappy_this_trigger = 0
+	while t < 10001:
 		# choose an action epsilon greedily
 		readout_t = readout.eval(feed_dict={s: [s_t]})[0]
 		a_t = np.zeros([ACTIONS])
@@ -177,21 +179,29 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 		s_t1 = np.append(x_t1, s_t[:, :, :3], axis=2)
 
 		# count rule action
-		action_map = {'U': [0, 1], 'D': [1, 0], 'N': [0, 0], 'E': [0, 0]}
+		# action_map = {'U': [0, 1], 'D': [1, 0], 'N': [0, 0], 'E': [0, 0]}
 		anti_map = {(0, 1): 'U', (1, 0): 'D', (0, 0): 'N', (0, 0): 'E'}
 		model_action = anti_map[tuple(a_t.tolist())]
 		rule_action = AdviseAction(pygame_frame)
 		# print(type(pygame_frame))
 		if rule_action == 'U' or rule_action == 'D':
 			rule_triger_times += 1
-			np.save("image_data//rule_input_image//rule_input" + str(t) + rule_action + model_action + ".npy", s_t)
-			np.save("image_data//rule_image//rule_" + str(t) + rule_action + model_action + ".npy", pygame_frame)
-			if action_map[rule_action] == a_t.tolist():
+			if model_action == rule_action:
 				action_count += 1
-			# else:
-			# 	cv2.imwrite("image_data//reve_image//reve" + str(t) + rule_action + ".png", pygame_frame)
-			# 	# cv2.imwrite("dqn_input_image//dqn_input" + str(t) + rule_action + ".png", s_t)
-			# 	print("store image")
+		if rule_action == 'U':
+			is_trigering = True
+			if model_action == 'U':
+				flappy_this_trigger += 1
+		else:
+			if is_trigering:
+				record_flag = True
+				is_trigering = False
+			else:
+				record_flag = False
+
+		if record_flag:
+			flappy_per_trigger.append(flappy_this_trigger)
+			flappy_this_trigger = 0
 
 		if rule_triger_times != 0 and t % 100000 == 0 and t > 0:
 			rate = float(action_count) / float(rule_triger_times)
@@ -220,34 +230,43 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
 		print("TIMESTEP", t, "/ STATE", state,
 			"/ EPSILON", epsilon, "/ ACTION", action_index, "/ REWARD", r_t, "/ PIPE_REWARD", pipe_reward,
-			"/ Q_MAX %e" % np.max(readout_t), "/ RULE_ACTION", rule_action)
+			"/ Model action", model_action, "/ Rule action", rule_action, "/ Rule trigger time",
+			rule_triger_times, "/ Flappy_time", flappy_this_trigger)
 		if terminal:
 			pipe_reward = 0
 
-	time_line_file = open(r'rate_result//rate_file//rule_time_line.txt', 'w')
+	time_line_file = open(r'rate_result//rate_file//ok_time_line.txt', 'w')
 	for word in time_line:
 		time_line_file.write(str(word))
 		time_line_file.write('\n')
 	time_line_file.close()
 
-	rate_array_file = open(r'rate_result//rate_file//rule_rate_array.txt', 'w')
+	rate_array_file = open(r'rate_result//rate_file//ok_rate_array.txt', 'w')
 	for word in rate_array:
 		rate_array_file.write(str(word))
 		rate_array_file.write('\n')
 	rate_array_file.close()
 
-	trigger_time_array_file = open(r'rate_result//rate_file//rule_trigger_time_array.txt', 'w')
+	trigger_time_array_file = open(r'rate_result//rate_file//ok_trigger_time_array.txt', 'w')
 	for word in trigger_time_array:
 		trigger_time_array_file.write(str(word))
 		trigger_time_array_file.write('\n')
 	trigger_time_array_file.close()
 
-	action_times_array_file = open(r'rate_result//rate_file//rule_action_times_array.txt', 'w')
+	action_times_array_file = open(r'rate_result//rate_file//ok_action_times_array.txt', 'w')
 	for word in action_times_array:
 		action_times_array_file.write(str(word))
 		action_times_array_file.write('\n')
 	action_times_array_file.close()
 
+	flappy_per_trigger_file = open(r'rate_result//rate_file//ok_flappy_per_trigger.txt', 'w')
+	for word in flappy_per_trigger:
+		flappy_per_trigger_file.write(str(word))
+		flappy_per_trigger_file.write('\n')
+	flappy_per_trigger_file.close()
+
+	print("total flappy", sum(flappy_per_trigger))
+	print("average flappy", sum(flappy_per_trigger) / len(flappy_per_trigger))
 	print('finished!')
 
 

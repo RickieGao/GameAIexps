@@ -2,38 +2,62 @@ import cv2
 import numpy as np
 
 
-def extract_objects(frame):
+def crop_frame(frame):
 	"""
-	function: extract the objects
-	:param frame: image to be processing
-	:return: a list of coordinates of the center and the radius of extracted objects, just like [((x,y),r)]
+	function: crop a image
+	:param frame: a image to be cropped
+	:return: the cropped image
 	"""
-	# minBGR = np.array([bgr_list[0] - thresh, bgr_list[1] - thresh, bgr_list[2] - thresh])
-	# maxBGR = np.array([bgr_list[0] + thresh, bgr_list[1] + thresh, bgr_list[2] + thresh])
-	#
-	# mask = cv2.inRange(frame, minBGR, maxBGR)
-	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-	blur = cv2.GaussianBlur(gray, (5, 5), 0)
-	thresh = cv2.adaptiveThreshold(blur, 255, 1, 1, 11, 2)
-	cnts, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	return frame[35:160, 8:165]
 
-	objects = []
+
+def PygameSurfaceToCV2Frame(pygame_surface):
+	'''
+		Convert pygame surface to cv2 frame.
+	'''
+	frame = cv2.transpose(pygame_surface)											# swap X and Y, which makes it readable
+	# frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+	return frame
+
+
+def extract_objects(frame, bgr_list, thresh):
+	"""
+	function: extract the object specified color
+	:param frame: image to be processing
+	:param bgr_list: BGR color of objects to be extracted
+	:param thresh: range of color
+	:return: a list of coordinates of the center of extracted objects, just like [()]
+	"""
+	frame = PygameSurfaceToCV2Frame(frame)
+	# np.save("ok.npy", frame)
+	minBGR = np.array([bgr_list[0] - thresh, bgr_list[1] - thresh, bgr_list[2] - thresh])
+	maxBGR = np.array([bgr_list[0] + thresh, bgr_list[1] + thresh, bgr_list[2] + thresh])
+
+	mask = cv2.inRange(frame, minBGR, maxBGR)
+	cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+	coordinate_list = []
 	for cnt in cnts:
 		((x, y), radius) = cv2.minEnclosingCircle(cnt)
 		center = (int(x), int(y))
-		objects.append((center, int(radius)))
+		coordinate_list.append(center)
 
-	# visualization
-	# cv2.imshow("Image", mask)
-	# cv2.waitKey(0)
-
-	return objects
+	return coordinate_list
 
 
 # test sample
 if __name__ == '__main__':
-	img = cv2.imread(r"imageExtractionLab/sample6.png")
+	img = np.load("ok.npy")
+	# img = cv2.imread("ok.png")
 
-	coordinates = extract_objects(img)
+	PLAYER_COLOR = [41, 212, 56]
+	BULLET_COLOR = [81, 234, 234]
+	ENEMY_COLOR = [61, 106, 242]
+	THRESH = 40
+
+	# cropped = crop_frame(img)
+	coordinates = extract_objects(img, ENEMY_COLOR, THRESH)
 	print(coordinates)
 	print(len(coordinates))
+	cv2.imshow("img", img)
+	cv2.waitKey(0)

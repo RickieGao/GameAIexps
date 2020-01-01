@@ -324,37 +324,39 @@ class Main(GameWindow, Bat, Ball, Brick, Collision, Score):
         pygame.display.update()
         # 控制游戏窗口刷新频率
         # time.sleep(0.010)
-        # clock = pygame.time.Clock()
-        # clock.tick(60)
+        clock = pygame.time.Clock()
+        clock.tick(60)
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         self.bat_mid = self.bat_x + self.bat_length // 2
         # print(self.ball_x, self.bat_mid)
         return image_data, self.reward, terminal, self.ball_x, self.bat_mid
 
 
-#
-# def human_play():
-#     running = 1
-#     while running:
-#         for event in pygame.event.get():
-#             if event.type == QUIT:
-#                 pygame.quit()
-#                 sys.exit()
-#             if event.type == KEYDOWN:
-#                 if event.key == K_LEFT:
-#                     reward, terminal, image_date, ball, bat = Main.frame_step([1, 0, 0])
-#                 if event.key == K_RIGHT:
-#                     reward, terminal, image_date, ball, bat = Main.frame_step([0, 0, 1])
-#             # print(reward)
-#             # if terminal == 1:
-#             #     pygame.quit()
-#             #     sys.exit()
-#
-#
-# if __name__ == '__main__':
-#     pygame.init()
-#     pygame.font.init()
-#     human_play()
+def human_play():
+    running = True
+    game = Main()
+    reward = 0
+    terminal = False
+    while running:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == KEYDOWN:
+                if event.key == K_LEFT:
+                    image, reward, terminal, ball, bat = game.frame_step([1, 0, 0])
+                if event.key == K_RIGHT:
+                    image, reward, terminal, ball, bat = game.frame_step([0, 0, 1])
+                print(reward)
+                if terminal == 1:
+                    pygame.quit()
+                    sys.exit()
+
+
+if __name__ == '__main__':
+    pygame.init()
+    pygame.font.init()
+    human_play()
 
 
 

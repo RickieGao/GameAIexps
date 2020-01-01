@@ -4,13 +4,11 @@ import cv2
 import sys
 import random
 from collections import deque
-# import copy
-# import gym
+sys.path.append("game/")
 import plane as game
 # from image_processing import *  # functions to process images (game frames)
 
 
-sys.path.append("game/")
 GAME = 'SpaceCrash'  # the name of the game being played for log files
 REPLAY_MEMORY = 50000  # number of previous transitions to remember
 BATCH = 32  # size of minibatch

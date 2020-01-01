@@ -4,6 +4,9 @@
 	All about image processing.
 '''
 import sys
+
+from FlappyBird.ruleset.func import ExtractBird, ExtractPipe, ExtractGround
+
 sys.path.append("ruleset/")
 import cv2
 from functools import cmp_to_key
