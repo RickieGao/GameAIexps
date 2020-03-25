@@ -324,12 +324,12 @@ class Main(GameWindow, Bat, Ball, Brick, Collision, Score):
         pygame.display.update()
         # 控制游戏窗口刷新频率
         # time.sleep(0.010)
-        clock = pygame.time.Clock()
-        clock.tick(60)
+        # clock = pygame.time.Clock()
+        # clock.tick(60)
         image_data = pygame.surfarray.array3d(pygame.display.get_surface())
         self.bat_mid = self.bat_x + self.bat_length // 2
         # print(self.ball_x, self.bat_mid)
-        return image_data, self.reward, terminal, self.ball_x, self.bat_mid
+        return image_data, self.reward, terminal, self.ball_x, self.bat_mid, self.ball_y
 
 
 def human_play():

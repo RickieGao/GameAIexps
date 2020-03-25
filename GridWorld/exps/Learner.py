@@ -1,4 +1,4 @@
-__author__ = 'philippe' # modified by Ludo Bouan
+
 from game import World
 import threading
 import time

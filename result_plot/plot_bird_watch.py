@@ -35,7 +35,7 @@ plt.rcParams['figure.dpi'] = 300
 fig_r, ax_r = plt.subplots()
 plt.xlabel("time", fontsize=20)
 plt.ylabel("rule action times", fontsize=20)
-# plt.title("Average Reward on Breakout", fontsize=20)
+plt.title("Average Reward on Breakout", fontsize=20)
 dqn, = plt.plot(DQN_time_line, DQN_rate, color="#cc3311")
 dqn_rule, = plt.plot(rule_time_line, rule_rate, color="#0077bb")
 dqn_reve, = plt.plot(reve_time_line, reve_rate, color="#33E6CC")

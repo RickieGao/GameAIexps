@@ -5,11 +5,10 @@ import sys
 import random
 import math
 from collections import deque
-# import copy
-# import gym
+sys.path.append("game/")
+sys.path.append("ruleset/")
 import plane as game
-# functions to process images (game frames)
-import RuleAction2
+import RuleAction
 
 
 sys.path.append("game/")
@@ -28,6 +27,8 @@ DECAY_STEPS = 30000
 GAMMA = 0.99  # decay rate of past observations
 ACTIONS = 3  # number of valid actions
 FRAME_PER_ACTION = 1
+
+EXP_NUM = "24"
 
 
 def setRandomSeed(seed):
@@ -154,7 +155,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
     # tensorboard output
     merged = tf.summary.merge_all()
-    writer = tf.summary.FileWriter(r"result/Exp13Graph/", sess.graph)
+    writer = tf.summary.FileWriter(r"result/Exp"+EXP_NUM+"Graph/", sess.graph)
 
     # record the reward
     with tf.name_scope('reward_per_life'):
@@ -210,7 +211,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
     # saving and loading networks
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
-    checkpoint = tf.train.get_checkpoint_state(r"result/Exp13_saved_networks")
+    checkpoint = tf.train.get_checkpoint_state(r"saved_networks/Exp13_2_saved_networks")
 
     if checkpoint and checkpoint.model_checkpoint_path:
         saver.restore(sess, checkpoint.model_checkpoint_path)
@@ -223,7 +224,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
     omega = INITIAL_OMEGA
     t = 0
     episode_reward = 0
-    while True:
+    while t < 2810001:
         # choose an action epsilon greedily
         readout_t = readout.eval(feed_dict={s: [s_t]})[0]  # returns output of current input(images).
         a_t = np.zeros([ACTIONS])
@@ -231,7 +232,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
         if t % FRAME_PER_ACTION == 0:
             # choose action based on rule with a probability of omega - epsilon
             if random.random() <= omega:
-                action = RuleAction2.rule_action(game_frame)
+                action = RuleAction.rule_action(game_frame)
                 if action == "left":
                     a_t[1] = 1
                 elif action == "right":
@@ -350,7 +351,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
         # save progress every 10000 iterations
         if t % 10000 == 0:
-            saver.save(sess, 'result/Exp13_saved_networks/' + GAME + '-dqn', global_step=t)
+            saver.save(sess, 'result/Exp'+EXP_NUM+'_saved_networks/' + GAME + '-dqn', global_step=t)
 
         # print info
         state = ""

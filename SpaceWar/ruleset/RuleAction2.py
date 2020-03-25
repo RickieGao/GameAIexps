@@ -1,5 +1,7 @@
 import cv2
 from random import choice
+import sys
+sys.path.append('imageExtractionLab/')
 import imageProcessing
 
 PLAYER_RADIUS = 57
@@ -29,7 +31,7 @@ def rule_action(frame):
 	options = ["left", "right"]
 
 	# if no enemy or more than one player, return random choice
-	if len(enemy_coordinate) == 0 or len(player_coordinate) > 1:
+	if len(enemy_coordinate) == 0 or len(player_coordinate) != 1:
 		return choice(options)
 	else:
 		# find the enemy that closest to player, record it at a tuple

@@ -2,7 +2,7 @@ import tensorflow as tf
 import cv2
 import sys
 sys.path.append("game/")
-import breakout as game
+import breakout_mod as game
 import random
 import numpy as np
 from collections import deque
@@ -111,8 +111,7 @@ def trainNetwork(s, readout, h_fc1, sess):
     D = deque()
 
     # printing
-    a_file = open("logs_" + GAME + "/readout.txt", 'w')
-    h_file = open("logs_" + GAME + "/hidden.txt", 'w')
+    # a_file = open("logs_" + GAME + "/readout.txt", 'w')
 
     # get the first state by doing nothing and preprocess the image to 80x80x4
     do_nothing = np.zeros(ACTIONS)
@@ -125,13 +124,13 @@ def trainNetwork(s, readout, h_fc1, sess):
     # saving and loading networks
     saver = tf.train.Saver()
     sess.run(tf.initialize_all_variables())
-    checkpoint = tf.train.get_checkpoint_state("DQN_R_saved_networks")
+    checkpoint = tf.train.get_checkpoint_state("DQN_Exp5_saved_networks")
 
-    # if checkpoint and checkpoint.model_checkpoint_path:
-    #     saver.restore(sess, checkpoint.model_checkpoint_path)
-    #     print("Successfully loaded:", checkpoint.model_checkpoint_path)
-    # else:
-    #     print("Could not find old network weights")
+    if checkpoint and checkpoint.model_checkpoint_path:
+        saver.restore(sess, checkpoint.model_checkpoint_path)
+        print("Successfully loaded:", checkpoint.model_checkpoint_path)
+    else:
+        print("Could not find old network weights")
 
     # start training
     epsilon = INITIAL_EPSILON
@@ -241,7 +240,7 @@ def trainNetwork(s, readout, h_fc1, sess):
 
         # save progress every 10000 iterations
         if t % 10000 == 0:
-            saver.save(sess, 'DQN_R_saved_networks/' + GAME + '-dqn', global_step=t)
+            saver.save(sess, 'DQN_Exp5_saved_networks/' + GAME + '-dqn', global_step=t)
 
         # print info
         state = ""
