@@ -15,7 +15,7 @@ e_decay = 0.7
 alpha = 0.6
 
 log = []
-
+omega = 0.8
 actions = World_simple.actions
 states = []
 Q = {}
@@ -87,19 +87,31 @@ def inc_Q(s, a, alpha, inc):
     World_simple.set_cell_score(s, a, Q[s][a])
 
 
+INITIAL_OMEGA = 0.9
+DECAY_RATE = 0.6
+DECAY_STEPS = 10
+
+
 def run():
     global discount
     global epsilon
     global alpha
     global log
     score = 0
+    omega = INITIAL_OMEGA
+    t = 0
     # time.sleep(1)
     s1 = World_simple.player
     a1, q_val1 = policy(s1)
-    for episode_num in range(40):
+    for episode_num in range(80):
         steps = 0
         score = 0
         while not World_simple.has_restarted():
+            # rule action
+            if random.random() <= omega:
+                a1 = "up"
+            omega = INITIAL_OMEGA * (DECAY_RATE ** (t / DECAY_STEPS))
+
             # Do the action
             (s1, a1, r1, s2) = do_action(a1)
             score += r1
@@ -123,6 +135,7 @@ def run():
             q_val1 = q_val2
 
             steps += 1
+            t += 1
 
             # Update the learning rate
 
@@ -131,13 +144,13 @@ def run():
 
         World_simple.restart_game()
         reset_E()
-        log.append({'episode': episode_num, 'score': score, 'steps': steps, 'alpha': alpha, 'epsilon': 0})
+        log.append({'episode': episode_num, 'score': score, 'steps': steps, 'alpha': alpha, 'epsilon': epsilon, 'omega': omega})
         time.sleep(0.01)
         alpha = max(0.1, pow(episode_num + 1, -0.4))
         epsilon = min(0.3, pow(episode_num + 1, -1.2))
 
-    with open('data/dqn.csv', 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=['episode', 'score', 'steps', 'alpha', 'epsilon'])
+    with open('data/exp02rule.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=['episode', 'score', 'steps', 'alpha', 'epsilon', 'omega'])
         writer.writeheader()
         for episode in log:
             writer.writerow(episode)

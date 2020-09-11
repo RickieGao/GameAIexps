@@ -2,8 +2,8 @@ import csv
 from decimal import Decimal
 import matplotlib
 from matplotlib import pyplot as plt
-
-WEIGHT_R = 0.7
+import numpy as np
+WEIGHT_R = 0.8
 
 
 def read_file(file_name):
@@ -29,12 +29,12 @@ def smooth(target, wight):
 
 # DQN_timesteps, DQN_Max_Q = read_file(r"plane\run-Exp10Graph2-tag-50kper_average_qMax_50kper_average_qMax.csv")
 # rule_timesteps, rule_Max_Q = read_file(r"plane\run-Exp13Graph-tag-50kper_average_qMax_50kper_average_qMax.csv")
-DQN_episode, DQN_reward = read_file(r"grid/DQN.csv")
-rule_episode, rule_reward = read_file(r"grid/Rule.csv")
+DQN_episode, DQN_reward = read_file(r"grid/log_eps-greedy_traces_9.csv")
+rule_episode, rule_reward = read_file(r"grid/log_eps-greedy_traces_8.csv")
 
 # smoothed_DQN_Max_Q = smooth(DQN_Max_Q, WEIGHT_Q)
 # smoothed_rule_Max_Q = smooth(rule_Max_Q, WEIGHT_Q)
-smoothed_DQN_reward = smooth(DQN_reward, 0.9)
+smoothed_DQN_reward = smooth(DQN_reward, WEIGHT_R)
 smoothed_rule_reward = smooth(rule_reward, WEIGHT_R)
 
 plt.rcParams['savefig.dpi'] = 300
@@ -42,10 +42,18 @@ plt.rcParams['figure.dpi'] = 300
 plt.figure()
 plt.xlabel("Episode", fontsize=20)
 plt.ylabel("Average Reward", fontsize=20)
-plt.title("Average Reward on GridWorld", fontsize=20)
+plt.title("Grid world", fontsize=20)
 dqn, = plt.plot(DQN_episode, smoothed_DQN_reward, color="#cc3311")
 dqn_rule, = plt.plot(rule_episode, smoothed_rule_reward, color="#0077bb")
-plt.legend(handles=[dqn, dqn_rule], labels=['DQN', 'RIL'],  loc='lower right')
+plt.legend(handles=[dqn, dqn_rule], labels=['Baseline', 'SML'],  loc='lower right')
+
+plt.grid(ls='--')
+smoothed_DQN_reward_std = np.std(smoothed_DQN_reward)
+smoothed_rule_reward_std = np.std(smoothed_rule_reward)
+plt.fill_between(DQN_episode, smoothed_DQN_reward - smoothed_DQN_reward_std,
+					smoothed_DQN_reward + smoothed_DQN_reward_std, facecolor='#cc3311', alpha=0.25)
+plt.fill_between(rule_episode, smoothed_rule_reward - smoothed_rule_reward_std,
+					smoothed_rule_reward + smoothed_rule_reward_std, facecolor='#0077bb', alpha=0.25)
 # plt.axvline(x=1480, color='black', linestyle="--")
 # plt.axhline(y=650, color='black', linestyle="--")
 # plt.figure()

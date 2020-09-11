@@ -1,5 +1,7 @@
 import cv2
 from random import choice
+# import sys
+# sys.path.append('imageProcess')
 import imageProcessing
 
 POLE_COLOR = [102, 153, 204]
@@ -12,6 +14,7 @@ def rule_action(frame):
 	:param frame: the input frame
 	:return: the action based rule
 	"""
+	frame = imageProcessing.state_to_frame(frame)
 	box = imageProcessing.extract_objects(frame, POLE_COLOR, THRESH)
 
 	# numpy array to list
@@ -30,7 +33,7 @@ def rule_action(frame):
 
 # test sample
 if __name__ == '__main__':
-	img = cv2.imread(r"sample1.png")
+	img = cv2.imread(r"../../imageProcess/sample1.png")
 	# cv2.imshow("test", img)
 	# cv2.waitKey()
 	action = rule_action(img)

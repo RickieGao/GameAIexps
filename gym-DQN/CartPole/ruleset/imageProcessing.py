@@ -11,6 +11,17 @@ def crop_frame(frame):
 	return frame[35:160, 8:165]
 
 
+def state_to_frame(state):
+	state = state.squeeze(0)
+	fetch_state = state[3, :, :]
+	fetch_state = fetch_state.unsqueeze(0)
+	fetch_state = fetch_state.repeat([4, 1, 1])
+	state_tensor = np.array(fetch_state)
+	state_tensor = state_tensor.transpose((1, 2, 0))
+	frame = cv2.cvtColor(state_tensor, cv2.COLOR_RGB2GRAY)
+	return frame
+
+
 def extract_objects(frame, bgr_list, thresh):
 	"""
 	function: extract the object specified color
@@ -42,7 +53,7 @@ def extract_objects(frame, bgr_list, thresh):
 
 # test sample
 if __name__ == '__main__':
-	img = cv2.imread(r"sample1.png")
+	img = cv2.imread(r"../../imageProcess/sample1.png")
 
 	POLE_COLOR = [102, 153, 204]
 	THRESH = 40

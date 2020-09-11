@@ -1,5 +1,7 @@
 __author__ = 'philippe' # modified by Ludo Bouan
-import World4
+import sys
+sys.path.append('game/')
+import World_simple
 import threading
 import time
 import random
@@ -14,12 +16,12 @@ alpha = 0.6
 
 log = []
 
-actions = World4.actions
+actions = World_simple.actions
 states = []
 Q = {}
 E = {}
-for i in range(World4.x):
-    for j in range(World4.y):
+for i in range(World_simple.x):
+    for j in range(World_simple.y):
         states.append((i, j))
 
 for state in states:
@@ -28,31 +30,31 @@ for state in states:
     for action in actions:
         temp[action] = 0.0 # Set to 0.1 if following greedy policy
         temp_e[action] = 0.0
-        World4.set_cell_score(state, action, temp[action])
+        World_simple.set_cell_score(state, action, temp[action])
     Q[state] = temp
     E[state] = temp_e
 
-for (i, j, c, w) in World4.specials:
+for (i, j, c, w) in World_simple.specials:
     for action in actions:
         Q[(i, j)][action] = w
-        World4.set_cell_score((i, j), action, w)
+        World_simple.set_cell_score((i, j), action, w)
 
 
 def do_action(action):
-    s = World4.player
-    r = -World4.score
+    s = World_simple.player
+    r = -World_simple.score
     if action == actions[0]:
-        World4.try_move(0, -1)
+        World_simple.try_move(0, -1)
     elif action == actions[1]:
-        World4.try_move(0, 1)
+        World_simple.try_move(0, 1)
     elif action == actions[2]:
-        World4.try_move(-1, 0)
+        World_simple.try_move(-1, 0)
     elif action == actions[3]:
-        World4.try_move(1, 0)
+        World_simple.try_move(1, 0)
     else:
         return
-    s2 = World4.player
-    r += World4.score
+    s2 = World_simple.player
+    r += World_simple.score
     return s, action, r, s2
 
 
@@ -82,7 +84,7 @@ def policy(s, eps=epsilon):
 
 def inc_Q(s, a, alpha, inc):
     Q[s][a] += alpha * inc * E[s][a]
-    World4.set_cell_score(s, a, Q[s][a])
+    World_simple.set_cell_score(s, a, Q[s][a])
 
 
 def run():
@@ -91,13 +93,13 @@ def run():
     global alpha
     global log
     score = 0
-    time.sleep(1)
-    s1 = World4.player
+    # time.sleep(1)
+    s1 = World_simple.player
     a1, q_val1 = policy(s1)
-    for episode_num in range(40):
+    for episode_num in range(80):
         steps = 0
         score = 0
-        while not World4.has_restarted():
+        while not World_simple.has_restarted():
             # Do the action
             (s1, a1, r1, s2) = do_action(a1)
             score += r1
@@ -125,16 +127,16 @@ def run():
             # Update the learning rate
 
             # MODIFY THIS SLEEP IF THE GAME IS GOING TOO FAST.
-            # time.sleep(0.005)
+            time.sleep(0.005)
 
-        World4.restart_game()
+        World_simple.restart_game()
         reset_E()
-        log.append({'episode': episode_num, 'score': score, 'steps': steps, 'alpha': alpha, 'epsilon': 0})
+        log.append({'episode': episode_num, 'score': score, 'steps': steps, 'alpha': alpha, 'epsilon': epsilon})
         # time.sleep(0.01)
-        alpha = max(0.1, pow(episode_num+1, -0.4))
-        epsilon = min(0.3, pow(episode_num+1, -1.2))
+        alpha = max(0.1, pow(episode_num + 1, -0.4))
+        epsilon = min(0.3, pow(episode_num + 1, -1.2))
 
-    with open('data/Rule.csv', 'w', newline='') as csvfile:
+    with open('data/exp01dqn.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=['episode', 'score', 'steps', 'alpha', 'epsilon'])
         writer.writeheader()
         for episode in log:
@@ -145,4 +147,4 @@ def run():
 t = threading.Thread(target=run)
 t.daemon = True
 t.start()
-World4.start_game()
+World_simple.start_game()

@@ -42,7 +42,7 @@ def extract_objects(frame, bgr_list, thresh):
 
 # test sample
 if __name__ == '__main__':
-	img = cv2.imread(r"sample2.png")
+	img = cv2.imread(r"sample1.png")
 
 	POLE_COLOR = [102, 153, 204]
 	THRESH = 40

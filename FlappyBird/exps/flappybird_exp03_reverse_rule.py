@@ -1,6 +1,4 @@
 #!/usr/bin python
-from __future__ import print_function
-
 import tensorflow as tf
 import cv2
 import sys
@@ -305,8 +303,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
 		# update pygame frame
 		pygame_frame = x_t1_colored
-		if r_t == 1:
-			pipe_reward += 1
+		pipe_reward += r_t
 
 		# only train if done observing
 		if t > OBSERVE:
@@ -408,7 +405,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 			pipe_reward = 0
 
 def playGame():
-	gpu_options = tf.GPUOptions(allow_growth=True)
+	# gpu_options = tf.GPUOptions(allow_growth=True)
 	sess = tf.InteractiveSession(config=tf.ConfigProto(gpu_options=gpu_options))
 	s, readout, W_fc1, W_fc2 = createNetwork()
 	trainNetwork(s, readout, W_fc1, W_fc2, sess)

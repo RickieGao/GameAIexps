@@ -3,8 +3,10 @@ import tensorflow as tf
 import numpy as np 
 import random
 from collections import deque
-# from pyglet.gl import *
-# gl_lib = pyglet.lib.load_library('GL')
+import cv2
+import sys
+sys.path.append("ruleset/")
+from ruleset import RuleAction
 
 # Hyper Parameters for DQN
 GAMMA = 0.9  # discount factor for target Q
@@ -45,7 +47,7 @@ class DQN:
 		self.episode_array = []
 		self.time_line = []
 
-		checkpoint = tf.train.get_checkpoint_state("saved_networks")
+		checkpoint = tf.train.get_checkpoint_state("exp02saved_networks")
 		if checkpoint and checkpoint.model_checkpoint_path:
 			self.saver.restore(self.session, checkpoint.model_checkpoint_path)
 			print("Successfully loaded:", checkpoint.model_checkpoint_path)
@@ -53,7 +55,7 @@ class DQN:
 			print("Could not find old network weights")
 
 		global summary_writer
-		summary_writer = tf.summary.FileWriter('results/Exp01Graph', graph=self.session.graph)
+		summary_writer = tf.summary.FileWriter('results/Exp02Graph', graph=self.session.graph)
 
 	def create_Q_network(self):
 		# network weights
@@ -174,8 +176,8 @@ class DQN:
 		summary_writer.add_summary(summary_str, self.time_step)
 
 		# save network every 1000 iteration
-		if self.time_step % 1000 == 0:
-			self.saver.save(self.session, 'results/saved_networks/' + 'network' + '-dqn', global_step=self.time_step)
+		# if self.time_step % 1000 == 0:
+		# 	self.saver.save(self.session, 'results/exp02saved_networks/' + 'network' + '-dqn', global_step=self.time_step)
 
 	def egreedy_action(self, state):
 		Q_value = self.Q_value.eval(feed_dict={
@@ -211,6 +213,9 @@ ENV_NAME = 'CartPole-v0'
 EPISODE = 10000  # Episode limitation
 STEP = 300  # Step limitation in an episode
 TEST = 10  # The number of experiment test every 100 episode
+INITIAL_OMEGA = 0.8
+DECAY_RATE = 0.8
+DECAY_STEPS = 5000
 
 
 def main():
@@ -220,46 +225,41 @@ def main():
 	# initialize task
 	state = env.reset()
 	episode_reward = 0
-	while agent.time_step <= 100000:
+	omega = INITIAL_OMEGA
+	while agent.time_step <= 600000:
 		# Train
 		env.render()
 		action = agent.egreedy_action(state)  # e-greedy action for train
+		if random.random() <= omega:
+			if state[2] >= 0:
+				action = 1
+			else:
+				action = 0
+		omega = INITIAL_OMEGA * (DECAY_RATE ** (agent.time_step / DECAY_STEPS))
 		next_state, reward, done, _ = env.step(action)
 		# Define reward for agent
 		reward_agent = -1 if done else 0.1
 		agent.perceive(state, action, reward_agent, next_state, done)
 		state = next_state
 
-		print("TIMESTEP", int(agent.time_step), "/ EPSILON", agent.epsilon, "/ ACTION", action, "/ REWARD", reward_agent,
+		print("TIMESTEP", int(agent.time_step), "/ EPSILON", agent.epsilon, "/ ACTION", action, "/ ANGEL", state[2], "/ REWARD", reward_agent,
 				"/ EPISODE_REWARD", agent.episode_reward, "/ TERMINAL", done)
 		if done:
 			env.reset()
 
 	# restore lists
-	time_line_r_file = open(r'results\exp01dqn\episodes.txt', 'w')
-	for word in agent.episode_array:
-		time_line_r_file.write(str(word))
-		time_line_r_file.write('\n')
-	time_line_r_file.close()
-
-	time_line_q_file = open(r'results\exp01dqn\time_line_q.txt', 'w')
-	for word in agent.time_line:
-		time_line_q_file.write(str(word))
-		time_line_q_file.write('\n')
-	time_line_q_file.close()
-
-	reward_array_file = open(r'results\exp01dqn\reward_array.txt', 'w')
-	for word in agent.reward_array:
-		reward_array_file.write(str(word))
-		reward_array_file.write('\n')
-	reward_array_file.close()
-
-	max_q_array_file = open(r'results\exp01dqn\max_q_array.txt', 'w')
-	for word in agent.max_q_array:
-		max_q_array_file.write(str(word))
-		max_q_array_file.write('\n')
-	max_q_array_file.close()
+	write_file('results\\exp02rule\\episodes.txt', agent.episode_array)
+	write_file('results\\exp02rule\\time_line_q.txt', agent.time_line)
+	write_file('results\\exp02rule\\reward_array.txt', agent.reward_array)
+	write_file('results\\exp02rule\\max_q_array.txt', agent.max_q_array)
 	print("finished!")
+
+
+def write_file(file_name, target):
+	with open(file_name, "w") as file:
+		for word in target:
+			file.write(str(word))
+			file.write('\n')
 
 
 if __name__ == '__main__':

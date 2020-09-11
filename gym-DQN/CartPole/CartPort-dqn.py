@@ -3,6 +3,8 @@ import tensorflow as tf
 import numpy as np 
 import random
 from collections import deque
+# from pyglet.gl import *
+# gl_lib = pyglet.lib.load_library('GL')
 
 # Hyper Parameters for DQN
 GAMMA = 0.9  # discount factor for target Q
@@ -35,15 +37,23 @@ class DQN:
 		# loading networks
 		self.saver = tf.train.Saver()
 
+		# record numbers
+		self.episode_reward = 0
+		self.episode = 0
+		self.reward_array = []
+		self.max_q_array = []
+		self.episode_array = []
+		self.time_line = []
+
 		checkpoint = tf.train.get_checkpoint_state("saved_networks")
 		if checkpoint and checkpoint.model_checkpoint_path:
-				self.saver.restore(self.session, checkpoint.model_checkpoint_path)
-				print("Successfully loaded:", checkpoint.model_checkpoint_path)
+			self.saver.restore(self.session, checkpoint.model_checkpoint_path)
+			print("Successfully loaded:", checkpoint.model_checkpoint_path)
 		else:
-				print("Could not find old network weights")
+			print("Could not find old network weights")
 
 		global summary_writer
-		summary_writer = tf.summary.FileWriter('Exp01/Exp01Graph', graph=self.session.graph)
+		summary_writer = tf.summary.FileWriter('results/Exp01Graph', graph=self.session.graph)
 
 	def create_Q_network(self):
 		# network weights
@@ -128,24 +138,34 @@ class DQN:
 			self.state_input: state_batch
 			})
 
-		self.re_count += reward
-		self.re_count_step += reward
-		self.episode_reward += reward
-		if done:
-			self.session.run(self.reward_update, feed_dict={self.reward_count: float(self.re_count)})
-			re = self.session.run(self.reward_sum)
-			summary_writer.add_summary(re, self.life_count)
-			self.session.run(self.reward_fresh)
-			self.re_count = 0
-			self.life_count += 1
+		# record data
+		if not done:
+			self.episode_reward += reward
+		else:
+			self.reward_array.append(self.episode_reward)
+			self.episode += 1
+			self.episode_array.append(self.episode)
 			self.episode_reward = 0
 
-		if self.time_step % 100 == 0:
-			self.session.run(self.reward_update_step, feed_dict={self.reward_count_step: float(self.re_count_step)})
-			re_step = self.session.run(self.reward_sum_step)
-			summary_writer.add_summary(re_step, self.time_step * 100)
-			self.session.run(self.reward_fresh_step)
-			self.re_count_step = 0
+
+		# self.re_count += reward
+		# self.re_count_step += reward
+		# self.episode_reward += reward
+		# if done:
+		# 	self.session.run(self.reward_update, feed_dict={self.reward_count: float(self.re_count)})
+		# 	re = self.session.run(self.reward_sum)
+		# 	summary_writer.add_summary(re, self.life_count)
+		# 	self.session.run(self.reward_fresh)
+		# 	self.re_count = 0
+		# 	self.life_count += 1
+		# 	self.episode_reward = 0
+		#
+		# if self.time_step % 100 == 0:
+		# 	self.session.run(self.reward_update_step, feed_dict={self.reward_count_step: float(self.re_count_step)})
+		# 	re_step = self.session.run(self.reward_sum_step)
+		# 	summary_writer.add_summary(re_step, self.time_step * 100)
+		# 	self.session.run(self.reward_fresh_step)
+		# 	self.re_count_step = 0
 		summary_str = self.session.run(merged_summary_op, feed_dict={
 				self.y_input: y_batch,
 				self.action_input: action_batch,
@@ -154,8 +174,8 @@ class DQN:
 		summary_writer.add_summary(summary_str, self.time_step)
 
 		# save network every 1000 iteration
-		if self.time_step % 1000 == 0:
-			self.saver.save(self.session, 'Exp01/saved_networks/' + 'network' + '-dqn', global_step=self.time_step)
+		# if self.time_step % 1000 == 0:
+		# 	self.saver.save(self.session, 'results/saved_networks/' + 'network' + '-dqn', global_step=self.time_step)
 
 	def egreedy_action(self, state):
 		Q_value = self.Q_value.eval(feed_dict={
@@ -163,10 +183,13 @@ class DQN:
 			})[0]
 		if random.random() <= self.epsilon:
 			self.epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 10000
-			return random.randint(0, self.action_dim - 1)
+			action = random.randint(0, self.action_dim - 1)
 		else:
 			self.epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 10000
-			return np.argmax(Q_value)
+			action = np.argmax(Q_value)
+		self.max_q_array.append(np.max(Q_value))
+		self.time_line.append(self.time_step)
+		return action
 
 	def action(self, state):
 		return np.argmax(self.Q_value.eval(feed_dict = {
@@ -197,9 +220,9 @@ def main():
 	# initialize task
 	state = env.reset()
 	episode_reward = 0
-	while True:
+	while agent.time_step <= 400000:
 		# Train
-		# env.render()
+		env.render()
 		action = agent.egreedy_action(state)  # e-greedy action for train
 		next_state, reward, done, _ = env.step(action)
 		# Define reward for agent
@@ -211,6 +234,32 @@ def main():
 				"/ EPISODE_REWARD", agent.episode_reward, "/ TERMINAL", done)
 		if done:
 			env.reset()
+
+	# restore lists
+	time_line_r_file = open(r'results\exp01dqn\episodes.txt', 'w')
+	for word in agent.episode_array:
+		time_line_r_file.write(str(word))
+		time_line_r_file.write('\n')
+	time_line_r_file.close()
+
+	time_line_q_file = open(r'results\exp01dqn\time_line_q.txt', 'w')
+	for word in agent.time_line:
+		time_line_q_file.write(str(word))
+		time_line_q_file.write('\n')
+	time_line_q_file.close()
+
+	reward_array_file = open(r'results\exp01dqn\reward_array.txt', 'w')
+	for word in agent.reward_array:
+		reward_array_file.write(str(word))
+		reward_array_file.write('\n')
+	reward_array_file.close()
+
+	max_q_array_file = open(r'results\exp01dqn\max_q_array.txt', 'w')
+	for word in agent.max_q_array:
+		max_q_array_file.write(str(word))
+		max_q_array_file.write('\n')
+	max_q_array_file.close()
+	print("finished!")
 
 
 if __name__ == '__main__':

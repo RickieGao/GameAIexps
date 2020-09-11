@@ -25,14 +25,6 @@ FRAME_PER_ACTION = 1
 game = gym.make("GAME")
 
 ACTIONS = game.action_space.n  # number of valid actions
-"""
-action value to action mapping:
-skiing-V0:
-0:do nothing
-1:right
-2:left
-
-"""
 
 
 def setRandomSeed(seed):

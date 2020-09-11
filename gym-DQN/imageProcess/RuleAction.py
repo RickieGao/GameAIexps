@@ -30,7 +30,7 @@ def rule_action(frame):
 
 # test sample
 if __name__ == '__main__':
-	img = cv2.imread(r"image_process_lab/sample1.png")
+	img = cv2.imread(r"sample1.png")
 	# cv2.imshow("test", img)
 	# cv2.waitKey()
 	action = rule_action(img)

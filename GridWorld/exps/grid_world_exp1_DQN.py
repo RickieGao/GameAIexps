@@ -8,11 +8,11 @@ import pygame
 # import copy
 # import gym
 sys.path.append("game/")
-import breakout_2actions as game
+import grid_world as game
 # from image_processing import *  # functions to process images (game frames)
 
 
-GAME = 'breakout'  # the name of the game being played for log files
+GAME = 'grid_world'  # the name of the game being played for log files
 REPLAY_MEMORY = 50000  # number of previous transitions to remember
 BATCH = 32  # size of minibatch
 OBSERVE = 100000.  # timesteps to observe before training
@@ -23,7 +23,7 @@ LEARNING_RATE = 1e-6
 # INITIAL_OMEGA = 0.5  # OMEGA is the probability of rule
 # FINAL_OMEGA = 0
 GAMMA = 0.99  # decay rate of past observations
-ACTIONS = 2  # number of valid actions
+ACTIONS = 4  # number of valid actions
 FRAME_PER_ACTION = 1
 
 
@@ -151,7 +151,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
     # tensorboard output
     merged = tf.summary.merge_all()
-    writer = tf.summary.FileWriter(r"result/Exp8Graph/", sess.graph)
+    writer = tf.summary.FileWriter(r"result/Exp1Graph/", sess.graph)
 
     # record the reward
     with tf.name_scope('reward_per_life'):
@@ -195,8 +195,9 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
     # get the first state by doing nothing and preprocess the image to 80x80x4
     do_nothing = np.zeros(ACTIONS)
-    do_nothing[1] = 1
-    x_t_colored, r_0, terminal, _, _ = game_state.frame_step(do_nothing)
+    do_nothing[0] = 1
+    x_t_colored, r_0, terminal = game_state.frame_step(do_nothing)
+    print(x_t_colored)
     x_t = cv2.cvtColor(cv2.resize(x_t_colored, (80, 80)), cv2.COLOR_BGR2GRAY)
     ret, x_t = cv2.threshold(x_t, 1, 255, cv2.THRESH_BINARY)
     s_t = np.stack((x_t, x_t, x_t, x_t), axis=2)
@@ -207,7 +208,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
     # saving and loading networks
     saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
-    checkpoint = tf.train.get_checkpoint_state(r"result/Exp8_saved_networks")
+    checkpoint = tf.train.get_checkpoint_state(r"result/Exp1_saved_networks")
 
     if checkpoint and checkpoint.model_checkpoint_path:
         saver.restore(sess, checkpoint.model_checkpoint_path)
@@ -245,7 +246,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
         #     omega -= (FINAL_OMEGA - INITIAL_OMEGA) / EXPLORE
 
         # run the selected action and observe next state and reward
-        x_t1_colored, r_t, terminal, _, _ = game_state.frame_step(a_t)
+        x_t1_colored, r_t, terminal= game_state.frame_step(a_t)
         x_t1 = cv2.cvtColor(cv2.resize(x_t1_colored, (80, 80)), cv2.COLOR_BGR2GRAY)
         ret, x_t1 = cv2.threshold(x_t1, 1, 255, cv2.THRESH_BINARY)
         x_t1 = np.reshape(x_t1, (80, 80, 1))
@@ -337,7 +338,7 @@ def trainNetwork(s, readout, W_fc1, W_fc2, sess):
 
         # save progress every 10000 iterations
         if t % 10000 == 0:
-            saver.save(sess, 'result/Exp8_saved_networks/' + GAME + '-dqn', global_step=t)
+            saver.save(sess, 'result/Exp1_saved_networks/' + GAME + '-dqn', global_step=t)
 
         # print info
         state = ""

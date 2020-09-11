@@ -20,8 +20,8 @@ FINAL_EPSILON = 0.001  # final value of epsilon
 INITIAL_EPSILON = 0.5  # starting value of epsilon
 # INITIAL_OMEGA = 0.5  # OMEGA is the probability of rule
 # FINAL_OMEGA = 0
-GAMMA = 0.99  # decay rate of past observations
-LEARNING_RATE = 1e-6
+GAMMA = 0.9  # decay rate of past observations
+LEARNING_RATE = 1e-5
 FRAME_PER_ACTION = 1
 
 game = gym.make("CartPole-v0")

@@ -1,4 +1,3 @@
-__author__ = 'philippe'
 from tkinter import *
 master = Tk()
 
@@ -6,17 +5,19 @@ triangle_size = 0.1
 cell_score_min = -1
 cell_score_max = 1
 Width = 80
-(x, y) = (9, 7)
+# (x, y) = (9, 7)
+(x, y) = (3, 4)
 actions = ["up", "down", "left", "right"]
 
 board = Canvas(master, width=x*Width, height=y*Width)
-player = (int(x/2), y-1)
+player = (1, 3)
 score = 1
 restart = False
 walk_reward = -2
 
-walls = [(1, 1), (2, 2), (2, 1), (7, 1), (4, 3), (1, 2), (4, 5), (6, 1), (7, 2), (6, 2), (3, 5), (5, 5), (2, 5), (6, 5)]
-specials = [(4, 0, "green", 100)]
+walls = []
+specials = [(1, 0, "green", 100), (0, 0, "red", -600), (0, 1, "red", -600), (0, 2, "red", -600), (0, 3, "red", -600),
+            (2, 0, "red", -600), (2, 1, "red", -600), (2, 2, "red", -600), (2, 3, "red", -600)]
 cell_scores = {}
 
 
@@ -77,7 +78,7 @@ def set_cell_score(state, action, val):
 
 def try_move(dx, dy):
     global player, x, y, score, walk_reward, me, restart
-    if restart == True:
+    if restart:
         restart_game()
     new_x = player[0] + dx
     new_y = player[1] + dy
@@ -116,7 +117,7 @@ def call_right(event):
 
 def restart_game():
     global player, score, me, restart
-    player = (int(x/2)+1, y-1)
+    player = (1, 3)
     score = 1
     restart = False
     board.coords(me, player[0]*Width+Width*2/10, player[1]*Width+Width*2/10, player[0]*Width+Width*8/10, player[1]*Width+Width*8/10)
