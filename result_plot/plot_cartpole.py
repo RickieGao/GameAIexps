@@ -84,12 +84,15 @@ smoothed_max_q = smooth(max_q, WEIGHT_Q)
 smoothed_rule_max_q = smooth(rule_max_q, WEIGHT_Q)
 # smoothed_reverse_Max_Q = smooth(reve_max_q, WEIGHT_Q)
 
+plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
+plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+
 plt.rcParams['savefig.dpi'] = 300
 plt.rcParams['figure.dpi'] = 300
 plt.figure()
-plt.xlabel("Episode", fontsize=20)
-plt.ylabel("Average Reward", fontsize=20)
-plt.title("Cart pole", fontsize=20 )
+plt.xlabel("游戏局数", fontsize=16)
+plt.ylabel("单局游戏奖励", fontsize=16)
+plt.title("竖杆子", fontsize=16)
 dqn, = plt.plot(time_line_r, smoothed_reward_DQN, color="#cc3311")
 dqn_rule, = plt.plot(rule_time_line_r, smoothed_reward_rule, color="#0077bb")
 

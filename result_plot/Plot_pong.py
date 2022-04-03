@@ -43,6 +43,9 @@ if __name__ == '__main__':
     plt.rcParams['savefig.dpi'] = 300
     plt.rcParams['figure.dpi'] = 300
 
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
+    plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
+
     if PLOT_REWARDS:
         # DQN
         dqn_episode_data = load_data(DQN_DATA_DIR + "/episode_pong_dqn.npy")
@@ -70,9 +73,9 @@ if __name__ == '__main__':
         # dril_reward_data = [x + 22 for x in dril_reward_data]
 
         fig_r, ax_r = plt.subplots()
-        plt.xlabel("Episode", fontsize=20)
-        plt.ylabel("Average Reward", fontsize=20)
-        plt.title("Pong", fontsize=20)
+        plt.xlabel("游戏局数", fontsize=16)
+        plt.ylabel("单局游戏奖励", fontsize=16)
+        plt.title("乒乓球", fontsize=16)
         dqn, = plt.plot(dqn_episode_data, dqn_reward_data, color="#cc3311")
         dqn_rule, = plt.plot(dril_episode_data, dril_reward_data, color="#0077bb")
 

@@ -65,12 +65,15 @@ smoothed_rule_reward = smooth(rule_reward, WEIGHT_R)
 # muted_unsmoothed_rule_episode = [x[0] for x in rule_muted_unsmoothed_coordinate]
 # muted_unsmoothed_rule_reward = [x[1] for x in rule_muted_unsmoothed_coordinate]
 
+plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
+plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+
 plt.rcParams['savefig.dpi'] = 300
 plt.rcParams['figure.dpi'] = 300
 plt.figure()
-plt.xlabel("Episode", fontsize=20)
-plt.ylabel("Average Reward", fontsize=20)
-plt.title("Space war", fontsize=20)
+plt.xlabel("游戏局数", fontsize=16)
+plt.ylabel("单局游戏奖励", fontsize=16)
+plt.title("飞机大战", fontsize=16)
 dqn, = plt.plot(DQN_episode, smoothed_DQN_reward, color="#cc3311")
 dqn_rule, = plt.plot(rule_episode, smoothed_rule_reward, color="#0077bb")
 
